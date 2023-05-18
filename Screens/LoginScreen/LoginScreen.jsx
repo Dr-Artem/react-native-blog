@@ -76,6 +76,12 @@ const LoginScreen = ({ bgImage }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    const onLogin = () => {
+        console.log(userName, email);
+        setEmail("");
+        setPassword("");
+    };
+
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ImageBackground
@@ -97,19 +103,22 @@ const LoginScreen = ({ bgImage }) => {
                                     style={styles.formInput}
                                     placeholder="Адрес електронної почти"
                                     placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={(value) => setEmail(value)}
+                                    onChangeText={setEmail}
                                     value={email}
                                 />
                                 <TextInput
                                     style={styles.formInput}
                                     placeholder="Пароль"
                                     placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={(value) => setPassword(value)}
+                                    onChangeText={setPassword}
                                     value={password}
                                 />
                             </View>
 
-                            <TouchableOpacity style={styles.formBtn}>
+                            <TouchableOpacity
+                                style={styles.formBtn}
+                                onPress={onLogin}
+                            >
                                 <Text style={styles.formBtnText}>Увійти</Text>
                             </TouchableOpacity>
                             <Text

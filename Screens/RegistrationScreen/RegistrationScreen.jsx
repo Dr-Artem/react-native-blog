@@ -93,6 +93,13 @@ const RegistrationScreen = ({ bgImage }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    const onRegister = () => {
+        console.log(userName, email, password);
+        setUserName("");
+        setEmail("");
+        setPassword("");
+    };
+
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ImageBackground
@@ -120,26 +127,29 @@ const RegistrationScreen = ({ bgImage }) => {
                                     style={styles.formInput}
                                     placeholder="Логін"
                                     placeholderTextColor={"#BDBDBD"}
-                                    onChange={(value) => setUserName(value)}
+                                    onChangeText={setUserName}
                                     value={userName}
                                 />
                                 <TextInput
                                     style={styles.formInput}
                                     placeholder="Адрес електронної почти"
                                     placeholderTextColor={"#BDBDBD"}
-                                    onChange={(value) => setEmail(value)}
+                                    onChangeText={setEmail}
                                     value={email}
                                 />
                                 <TextInput
                                     style={styles.formInput}
                                     placeholder="Пароль"
                                     placeholderTextColor={"#BDBDBD"}
-                                    onChange={(value) => setPassword(value)}
+                                    onChangeText={setPassword}
                                     value={password}
                                 />
                             </View>
 
-                            <TouchableOpacity style={styles.formBtn}>
+                            <TouchableOpacity
+                                style={styles.formBtn}
+                                onPress={onRegister}
+                            >
                                 <Text style={styles.formBtnText}>
                                     Зареєструватись
                                 </Text>

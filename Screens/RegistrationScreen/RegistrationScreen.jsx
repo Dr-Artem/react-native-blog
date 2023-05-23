@@ -12,7 +12,92 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+import bgImage from "../../images/BG.png";
 import userPhoto from "../../images/user.png";
+
+const RegistrationScreen = ({ navigation }) => {
+    const [userName, setUserName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const onRegister = () => {
+        setUserName("");
+        setEmail("");
+        setPassword("");
+        navigation.navigate("Home");
+    };
+
+    return (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ImageBackground
+                source={bgImage}
+                resizeMode="cover"
+                style={styles.backgroundImage}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <KeyboardAvoidingView
+                        keyboardVerticalOffset={
+                            Platform.OS === "ios" ? "-180" : "-80"
+                        }
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    >
+                        <View style={styles.formContainer}>
+                            <View style={styles.formPhotoWrapper}>
+                                <Image
+                                    style={styles.formUserPhoto}
+                                    source={userPhoto}
+                                />
+                            </View>
+                            <Text style={styles.formHeader}>Реєстрація</Text>
+                            <View style={styles.formInputList}>
+                                <TextInput
+                                    style={styles.formInput}
+                                    placeholder="Логін"
+                                    placeholderTextColor={"#BDBDBD"}
+                                    onChangeText={setUserName}
+                                    value={userName}
+                                />
+                                <TextInput
+                                    style={styles.formInput}
+                                    placeholder="Адрес електронної почти"
+                                    placeholderTextColor={"#BDBDBD"}
+                                    onChangeText={setEmail}
+                                    value={email}
+                                />
+                                <TextInput
+                                    style={styles.formInput}
+                                    placeholder="Пароль"
+                                    placeholderTextColor={"#BDBDBD"}
+                                    onChangeText={setPassword}
+                                    value={password}
+                                />
+                            </View>
+
+                            <TouchableOpacity
+                                style={styles.formBtn}
+                                onPress={onRegister}
+                            >
+                                <Text style={styles.formBtnText}>
+                                    Зареєструватись
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("Login")}
+                            >
+                                <Text
+                                    style={styles.loginRedirect}
+                                    dataDetectorType="link"
+                                >
+                                    Вже є аккаунт? Увійти
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </KeyboardAvoidingView>
+                </TouchableWithoutFeedback>
+            </ImageBackground>
+        </TouchableWithoutFeedback>
+    );
+};
 
 const styles = StyleSheet.create({
     backgroundImage: {
@@ -87,85 +172,5 @@ const styles = StyleSheet.create({
         color: "#1B4371",
     },
 });
-
-const RegistrationScreen = ({ bgImage }) => {
-    const [userName, setUserName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
-    const onRegister = () => {
-        console.log(userName, email, password);
-        setUserName("");
-        setEmail("");
-        setPassword("");
-    };
-
-    return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <ImageBackground
-                source={bgImage}
-                resizeMode="cover"
-                style={styles.backgroundImage}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <KeyboardAvoidingView
-                        keyboardVerticalOffset={
-                            Platform.OS === "ios" ? "-180" : "-80"
-                        }
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    >
-                        <View style={styles.formContainer}>
-                            <View style={styles.formPhotoWrapper}>
-                                <Image
-                                    style={styles.formUserPhoto}
-                                    source={userPhoto}
-                                />
-                            </View>
-                            <Text style={styles.formHeader}>Реєстрація</Text>
-                            <View style={styles.formInputList}>
-                                <TextInput
-                                    style={styles.formInput}
-                                    placeholder="Логін"
-                                    placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={setUserName}
-                                    value={userName}
-                                />
-                                <TextInput
-                                    style={styles.formInput}
-                                    placeholder="Адрес електронної почти"
-                                    placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={setEmail}
-                                    value={email}
-                                />
-                                <TextInput
-                                    style={styles.formInput}
-                                    placeholder="Пароль"
-                                    placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={setPassword}
-                                    value={password}
-                                />
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.formBtn}
-                                onPress={onRegister}
-                            >
-                                <Text style={styles.formBtnText}>
-                                    Зареєструватись
-                                </Text>
-                            </TouchableOpacity>
-                            <Text
-                                style={styles.loginRedirect}
-                                dataDetectorType="link"
-                            >
-                                Вже є аккаунт? Увійти
-                            </Text>
-                        </View>
-                    </KeyboardAvoidingView>
-                </TouchableWithoutFeedback>
-            </ImageBackground>
-        </TouchableWithoutFeedback>
-    );
-};
 
 export default RegistrationScreen;

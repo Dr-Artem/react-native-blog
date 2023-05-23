@@ -11,6 +11,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+import bgImage from "../../images/BG.png";
 
 const styles = StyleSheet.create({
     backgroundImage: {
@@ -72,14 +73,14 @@ const styles = StyleSheet.create({
     },
 });
 
-const LoginScreen = ({ bgImage }) => {
+const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const onLogin = () => {
-        console.log(userName, email);
         setEmail("");
         setPassword("");
+        navigation.navigate("Home");
     };
 
     return (
@@ -121,12 +122,18 @@ const LoginScreen = ({ bgImage }) => {
                             >
                                 <Text style={styles.formBtnText}>Увійти</Text>
                             </TouchableOpacity>
-                            <Text
-                                style={styles.loginRedirect}
-                                dataDetectorType="link"
+                            <TouchableOpacity
+                                onPress={() =>
+                                    navigation.navigate("Registration")
+                                }
                             >
-                                Відсутній аккаунт? Зареєструватись
-                            </Text>
+                                <Text
+                                    style={styles.loginRedirect}
+                                    dataDetectorType="link"
+                                >
+                                    Відсутній аккаунт? Зареєструватись
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </KeyboardAvoidingView>
                 </TouchableWithoutFeedback>

@@ -8,6 +8,7 @@ import CommentsScreen from "./Screens/CommentsScreen/CommentsScreen";
 import CreatePostScreen from "./Screens/CreatePostScreen/CreatePostScreen";
 import HomeScreen from "./Screens/HomeScreen/HomeScreen";
 import LoginScreen from "./Screens/LoginScreen/LoginScreen";
+import MapScreen from "./Screens/MapScreen/MapScreen";
 import RegistrationScreen from "./Screens/RegistrationScreen/RegistrationScreen";
 
 const Stack = createStackNavigator();
@@ -51,6 +52,17 @@ export default function App() {
                         component={CommentsScreen}
                         options={{
                             title: "Коментарі",
+                            headerBackTitleVisible: false,
+                            headerLeftContainerStyle: {
+                                paddingLeft: 16,
+                            },
+                        }}
+                    />
+                    <Stack.Screen
+                        name="Map"
+                        component={MapScreen}
+                        options={{
+                            title: "Карта",
                             headerBackTitleVisible: false,
                             headerLeftContainerStyle: {
                                 paddingLeft: 16,

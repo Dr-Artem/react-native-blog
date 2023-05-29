@@ -153,17 +153,26 @@ const Posts = ({ navigation }) => {
             <FlatList
                 data={posts}
                 renderItem={({ item }) => (
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate("Comments", item)}
-                        style={styles.postWrapper}
-                    >
-                        <Image
-                            style={styles.postPhoto}
-                            source={item.src}
-                        />
+                    <View style={styles.postWrapper}>
+                        <TouchableOpacity
+                            onPress={() =>
+                                navigation.navigate("CreatePost", item)
+                            }
+                        >
+                            <Image
+                                style={styles.postPhoto}
+                                source={item.src}
+                            />
+                        </TouchableOpacity>
+
                         <Text style={styles.postName}>{item.name}</Text>
                         <View style={styles.postInfo}>
-                            <View style={styles.postComments}>
+                            <TouchableOpacity
+                                onPress={() =>
+                                    navigation.navigate("Comments", item)
+                                }
+                                style={styles.postComments}
+                            >
                                 <Ionicons
                                     name="chatbubble-outline"
                                     size={24}
@@ -183,8 +192,11 @@ const Posts = ({ navigation }) => {
                                 >
                                     {item.comments.length}
                                 </Text>
-                            </View>
-                            <View style={styles.postLocation}>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate("Map", item)}
+                                style={styles.postLocation}
+                            >
                                 <Ionicons
                                     name="location-outline"
                                     size={24}
@@ -193,9 +205,9 @@ const Posts = ({ navigation }) => {
                                 <Text style={styles.postLocationText}>
                                     {item.fullLocation}
                                 </Text>
-                            </View>
+                            </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    </View>
                 )}
             />
         </View>

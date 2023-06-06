@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/auth/operation";
+
 import {
     ImageBackground,
     Keyboard,
@@ -11,7 +14,95 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+
 import bgImage from "../../images/BG.png";
+
+const LoginScreen = ({ navigation }) => {
+    const dispatch = useDispatch();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const onLogin = async () => {
+        const result = await dispatch(login({ email, password }));
+
+        if (!result.error) {
+            setEmail("");
+            setPassword("");
+            navigation.navigate("Home");
+        } else {
+            console.log(result.error.message);
+        }
+    };
+
+    return (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ImageBackground
+                source={bgImage}
+                resizeMode="cover"
+                style={styles.backgroundImage}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <KeyboardAvoidingView
+                        keyboardVerticalOffset={
+                            Platform.OS === "ios" ? "-190" : "-70"
+                        }
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    >
+                        <View style={styles.formContainer}>
+                            <Text style={styles.formHeader}>Увійти</Text>
+                            <View style={styles.formInputList}>
+                                <TextInput
+                                    keyboardAppearance={
+                                        Platform.OS === "ios" ? "dark" : null
+                                    }
+                                    inputMode="email"
+                                    autoComplete="email"
+                                    textContentType="emailAddress"
+                                    style={styles.formInput}
+                                    placeholder="Адрес електронної почти"
+                                    placeholderTextColor={"#BDBDBD"}
+                                    onChangeText={setEmail}
+                                    value={email}
+                                />
+                                <TextInput
+                                    keyboardAppearance={
+                                        Platform.OS === "ios" ? "dark" : null
+                                    }
+                                    autoComplete="password"
+                                    textContentType="password"
+                                    style={styles.formInput}
+                                    placeholder="Пароль"
+                                    placeholderTextColor={"#BDBDBD"}
+                                    onChangeText={setPassword}
+                                    value={password}
+                                />
+                            </View>
+
+                            <TouchableOpacity
+                                style={styles.formBtn}
+                                onPress={onLogin}
+                            >
+                                <Text style={styles.formBtnText}>Увійти</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() =>
+                                    navigation.navigate("Registration")
+                                }
+                            >
+                                <Text
+                                    style={styles.loginRedirect}
+                                    dataDetectorType="link"
+                                >
+                                    Відсутній аккаунт? Зареєструватись
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </KeyboardAvoidingView>
+                </TouchableWithoutFeedback>
+            </ImageBackground>
+        </TouchableWithoutFeedback>
+    );
+};
 
 const styles = StyleSheet.create({
     backgroundImage: {
@@ -72,74 +163,5 @@ const styles = StyleSheet.create({
         color: "#1B4371",
     },
 });
-
-const LoginScreen = ({ navigation }) => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
-    const onLogin = () => {
-        setEmail("");
-        setPassword("");
-        navigation.navigate("Home");
-    };
-
-    return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <ImageBackground
-                source={bgImage}
-                resizeMode="cover"
-                style={styles.backgroundImage}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <KeyboardAvoidingView
-                        keyboardVerticalOffset={
-                            Platform.OS === "ios" ? "-190" : "-70"
-                        }
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    >
-                        <View style={styles.formContainer}>
-                            <Text style={styles.formHeader}>Увійти</Text>
-                            <View style={styles.formInputList}>
-                                <TextInput
-                                    style={styles.formInput}
-                                    placeholder="Адрес електронної почти"
-                                    placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={setEmail}
-                                    value={email}
-                                />
-                                <TextInput
-                                    style={styles.formInput}
-                                    placeholder="Пароль"
-                                    placeholderTextColor={"#BDBDBD"}
-                                    onChangeText={setPassword}
-                                    value={password}
-                                />
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.formBtn}
-                                onPress={onLogin}
-                            >
-                                <Text style={styles.formBtnText}>Увійти</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() =>
-                                    navigation.navigate("Registration")
-                                }
-                            >
-                                <Text
-                                    style={styles.loginRedirect}
-                                    dataDetectorType="link"
-                                >
-                                    Відсутній аккаунт? Зареєструватись
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </KeyboardAvoidingView>
-                </TouchableWithoutFeedback>
-            </ImageBackground>
-        </TouchableWithoutFeedback>
-    );
-};
 
 export default LoginScreen;

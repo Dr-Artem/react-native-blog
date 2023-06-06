@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import {
     FlatList,
     Image,
@@ -12,7 +13,34 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { selectUser } from "../../redux/auth/selector";
+import { addComment } from "../../redux/posts/operation";
+import { selectComments } from "../../redux/posts/selector";
+
 const CommentsScreen = ({ route }) => {
+    const { src, id } = route.params;
+    const [comment, setComment] = useState(null);
+    const user = useSelector(selectUser);
+    const dispatch = useDispatch();
+    const comments = useSelector((state) => selectComments(state, id));
+
+    const postComment = () => {
+        if (comment.trim() !== "") {
+            const commentData = {
+                userId: user.uid,
+                message: comment,
+                userName: user.userName,
+                userPhoto: user.userPhoto,
+                timeStamp: Date.now(),
+            };
+            dispatch(addComment({ commentData, id }));
+            setComment("");
+            Keyboard.dismiss();
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
@@ -23,52 +51,63 @@ const CommentsScreen = ({ route }) => {
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <Image
                         style={styles.commentsPhoto}
-                        source={route.params.src}
+                        source={{ uri: src }}
                     />
                 </TouchableWithoutFeedback>
 
                 <FlatList
-                    data={route.params.comments}
-                    renderItem={({ item }) => (
-                        <View
-                            style={{
-                                ...styles.commentItem,
-                                flexDirection:
-                                    item.userName === "user"
-                                        ? "row-reverse"
-                                        : "row",
-                            }}
-                        >
-                            <Image
-                                style={styles.commentUserPhoto}
-                                source={item.userPicture}
-                            />
-                            <View
-                                style={{
-                                    ...styles.commentUserMessage,
-                                    borderTopLeftRadius:
-                                        item.userName === "user" ? 6 : 0,
-                                    borderTopRightRadius:
-                                        item.userName === "user" ? 0 : 6,
-                                }}
-                            >
-                                <Text style={styles.commentText}>
-                                    {item.message}
-                                </Text>
-                                <Text
+                    data={comments}
+                    renderItem={({ item }) => {
+                        const date = dayjs(item.timeStamp).format(
+                            "YYYY-MM-DD | HH:mm:ss"
+                        );
+                        return (
+                            item && (
+                                <View
                                     style={{
-                                        ...styles.commentDateTime,
-                                        textAlign:
-                                            item.userName === "user"
-                                                ? "left"
-                                                : "right",
+                                        ...styles.commentItem,
+                                        flexDirection:
+                                            item.userId === user.uid
+                                                ? "row-reverse"
+                                                : "row",
                                     }}
                                 >
-                                    {item.date} | {item.time}
-                                </Text>
-                            </View>
-                        </View>
-                    )}
+                                    <Image
+                                        style={styles.commentUserPhoto}
+                                        source={{ uri: item.userPhoto }}
+                                    />
+                                    <View
+                                        style={{
+                                            ...styles.commentUserMessage,
+                                            borderTopLeftRadius:
+                                                item.userId === user.uid
+                                                    ? 6
+                                                    : 0,
+                                            borderTopRightRadius:
+                                                item.userId === user.uid
+                                                    ? 0
+                                                    : 6,
+                                        }}
+                                    >
+                                        <Text style={styles.commentText}>
+                                            {item.message}
+                                        </Text>
+                                        <Text
+                                            style={{
+                                                ...styles.commentDateTime,
+                                                textAlign:
+                                                    item.userName === "user"
+                                                        ? "left"
+                                                        : "right",
+                                            }}
+                                        >
+                                            {date}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )
+                        );
+                    }}
                 />
 
                 <View style={styles.commentInputWrapper}>
@@ -76,8 +115,13 @@ const CommentsScreen = ({ route }) => {
                         placeholder="Коментувати..."
                         placeholderTextColor={"#BDBDBD"}
                         style={styles.commentInput}
+                        onChangeText={setComment}
+                        value={comment}
                     />
-                    <TouchableOpacity style={styles.commentInputSubmit}>
+                    <TouchableOpacity
+                        onPress={postComment}
+                        style={styles.commentInputSubmit}
+                    >
                         <Ionicons
                             name="arrow-up-outline"
                             size={24}

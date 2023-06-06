@@ -1,12 +1,24 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { logout } from "../../redux/auth/operation";
+import AllPosts from "../AllPosts/AllPosts";
 import PostsScreen from "../PostsScreen/PostsScreen";
 import ProfileScreen from "../ProfileScreen/ProfileScreen";
+
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { fetchPosts } from "../../redux/posts/operation";
 
 const Tab = createBottomTabNavigator();
 
 const HomeScreen = ({ navigation }) => {
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch(fetchPosts());
+    }, []);
+
     return (
         <Tab.Navigator
             id="TabNavigator"
@@ -30,14 +42,17 @@ const HomeScreen = ({ navigation }) => {
         >
             <Tab.Screen
                 name="Feed"
-                component={PostsScreen}
+                component={AllPosts}
                 options={{
                     tabBarShowLabel: false,
                     title: "Всі публікації",
                     headerRight: () => (
                         <TouchableOpacity
                             style={styles.logOutBtn}
-                            onPress={() => navigation.navigate("Login")}
+                            onPress={() => {
+                                dispatch(logout());
+                                navigation.navigate("Login");
+                            }}
                         >
                             <Ionicons
                                 name="log-out-outline"
@@ -64,7 +79,10 @@ const HomeScreen = ({ navigation }) => {
                     headerRight: () => (
                         <TouchableOpacity
                             style={styles.logOutBtn}
-                            onPress={() => navigation.navigate("Login")}
+                            onPress={() => {
+                                dispatch(logout());
+                                navigation.navigate("Login");
+                            }}
                         >
                             <Ionicons
                                 name="log-out-outline"

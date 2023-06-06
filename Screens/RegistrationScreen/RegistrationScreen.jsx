@@ -1,4 +1,11 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { register } from "../../redux/auth/operation";
+
+import * as ImagePicker from "expo-image-picker";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../../config";
+
 import {
     Image,
     ImageBackground,
@@ -12,19 +19,48 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+
 import bgImage from "../../images/BG.png";
-import userPhoto from "../../images/user.png";
 
 const RegistrationScreen = ({ navigation }) => {
+    const dispatch = useDispatch();
     const [userName, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [userPhoto, setUserPhoto] = useState(
+        "https://res.cloudinary.com/dmaywrdz0/image/upload/v1685389228/react-native-app/userlogo_uphxim.png"
+    );
 
-    const onRegister = () => {
-        setUserName("");
-        setEmail("");
-        setPassword("");
-        navigation.navigate("Home");
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setUserPhoto(result.assets[0].uri);
+        }
+    };
+
+    const onRegister = async () => {
+        const result = await dispatch(
+            register({ email, password, userName, userPhoto })
+        );
+        if (!result.error) {
+            const data = result.payload;
+            await addDoc(collection(db, "users"), {
+                userName: data.userName,
+                userPhoto: data.userPhoto,
+                userEmail: data.email,
+            });
+            setUserName("");
+            setEmail("");
+            setPassword("");
+            navigation.navigate("Home");
+        } else {
+            console.log(result.payload);
+        }
     };
 
     return (
@@ -42,15 +78,23 @@ const RegistrationScreen = ({ navigation }) => {
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
                     >
                         <View style={styles.formContainer}>
-                            <View style={styles.formPhotoWrapper}>
+                            <TouchableOpacity
+                                onPress={pickImage}
+                                style={styles.formPhotoWrapper}
+                            >
                                 <Image
                                     style={styles.formUserPhoto}
-                                    source={userPhoto}
+                                    source={{
+                                        uri: userPhoto,
+                                    }}
                                 />
-                            </View>
+                            </TouchableOpacity>
                             <Text style={styles.formHeader}>Реєстрація</Text>
                             <View style={styles.formInputList}>
                                 <TextInput
+                                    keyboardAppearance={
+                                        Platform.OS === "ios" ? "dark" : null
+                                    }
                                     style={styles.formInput}
                                     placeholder="Логін"
                                     placeholderTextColor={"#BDBDBD"}
@@ -58,6 +102,12 @@ const RegistrationScreen = ({ navigation }) => {
                                     value={userName}
                                 />
                                 <TextInput
+                                    keyboardAppearance={
+                                        Platform.OS === "ios" ? "dark" : null
+                                    }
+                                    inputMode="email"
+                                    autoComplete="email"
+                                    textContentType="emailAddress"
                                     style={styles.formInput}
                                     placeholder="Адрес електронної почти"
                                     placeholderTextColor={"#BDBDBD"}
@@ -65,6 +115,10 @@ const RegistrationScreen = ({ navigation }) => {
                                     value={email}
                                 />
                                 <TextInput
+                                    keyboardAppearance={
+                                        Platform.OS === "ios" ? "dark" : null
+                                    }
+                                    textContentType="password"
                                     style={styles.formInput}
                                     placeholder="Пароль"
                                     placeholderTextColor={"#BDBDBD"}
@@ -118,9 +172,10 @@ const styles = StyleSheet.create({
         width: "100%",
         top: -60,
         marginHorizontal: 16,
-        borderRadius: 16,
     },
     formUserPhoto: {
+        borderRadius: 16,
+        backgroundColor: "#FFFFFF",
         marginLeft: "auto",
         marginRight: "auto",
         width: 120,

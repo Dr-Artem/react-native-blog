@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import debounce from "lodash.debounce";
+import { useState } from "react";
 import {
     Dimensions,
     ImageBackground,
@@ -14,36 +15,62 @@ import {
     View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useDispatch, useSelector } from "react-redux";
+
 import CameraView from "../../components/CameraView/CameraView";
+import { selectUser } from "../../redux/auth/selector";
+import {
+    createPost,
+    deletePost,
+    updatePost,
+} from "../../redux/posts/operation";
 
-const CreatePostScreen = ({ navigation }) => {
+const CreatePostScreen = ({ navigation, route }) => {
     const [cameraStatus, setCameraStatus] = useState(false);
-    const [photoUrl, setPhotoUrl] = useState(null);
-    const [name, setName] = useState("");
-    const [location, setLocation] = useState("");
+    const [photoUrl, setPhotoUrl] = useState(route.params?.src || null);
+    const [name, setName] = useState(route.params?.name || "");
+    const [locationPlace, setLocationPlace] = useState(
+        route.params?.locationPlace || ""
+    );
+    const [locationCoords, setLocationCoords] = useState(
+        route.params?.locationCoords || null
+    );
+    const user = useSelector(selectUser);
+    const dispatch = useDispatch();
 
-    const screenWidth = Dimensions.get("window").width;
+    const findLocation = async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+            console.log("Permission to access location was denied");
+        }
 
-    useEffect(() => {
-        (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                console.log("Permission to access location was denied");
-            }
-
-            let location = await Location.getCurrentPositionAsync({});
-            const coords = {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            };
-            let loc = await Location.reverseGeocodeAsync(coords);
-            setLocation(`${loc[0].city}, ${loc[0].region}, ${loc[0].country}`);
-        })();
-    }, []);
+        let location = await Location.getCurrentPositionAsync({});
+        const coords = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+        };
+        setLocationCoords(coords);
+        let loc = await Location.reverseGeocodeAsync(coords);
+        setLocationPlace(`${loc[0].city}, ${loc[0].country}`);
+    };
 
     const submitPost = async () => {
-        // await MediaLibrary.createAssetAsync(photoUrl);
-        navigation.navigate("PostsScreen");
+        const postData = {
+            comments: [],
+            likes: [],
+            src: photoUrl,
+            name,
+            locationPlace,
+            locationCoords,
+            owner: user.uid,
+        };
+        const result = await dispatch(createPost(postData));
+
+        if (!result.error) {
+            navigation.navigate("PostsScreen");
+        } else {
+            console.log(result.payload);
+        }
     };
 
     const pickImage = async () => {
@@ -59,8 +86,44 @@ const CreatePostScreen = ({ navigation }) => {
     };
 
     const getCurrentPosition = async (event) => {
-        let address = await Location.geocodeAsync(event.target.value);
-        setLocation(address);
+        const value = event.trim();
+        try {
+            let address = await Location.geocodeAsync(value);
+            setLocationCoords({
+                latitude: address[0].latitude,
+                longitude: address[0].longitude,
+            });
+        } catch (error) {
+            console.error("Error getting current position:", error);
+        }
+    };
+
+    const deleteCurrent = async () => {
+        const postId = route.params.id;
+        const result = await dispatch(deletePost({ postId }));
+
+        if (!result.error) {
+            navigation.navigate("PostsScreen");
+        } else {
+            console.log(result.payload);
+        }
+    };
+
+    const updateCurrent = async () => {
+        const postId = route.params.id;
+        const postData = {
+            src: photoUrl,
+            name,
+            locationPlace,
+            locationCoords,
+        };
+        const result = await dispatch(updatePost({ postId, postData }));
+
+        if (!result.error) {
+            navigation.navigate("PostsScreen");
+        } else {
+            console.log(result.payload);
+        }
     };
 
     return cameraStatus ? (
@@ -71,11 +134,14 @@ const CreatePostScreen = ({ navigation }) => {
     ) : (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.createContainer}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                >
-                    <View style={styles.postWrapper}>
-                        <View>
+                <View style={styles.postWrapper}>
+                    <KeyboardAvoidingView
+                        keyboardVerticalOffset={
+                            Platform.OS === "ios" ? "180" : "-80"
+                        }
+                        behavior={Platform.OS === "ios" ? "position" : "height"}
+                    >
+                        <View style={styles.postWrapperSeccond}>
                             {photoUrl ? (
                                 <ImageBackground
                                     resizeMode="contain"
@@ -83,7 +149,6 @@ const CreatePostScreen = ({ navigation }) => {
                                     style={[
                                         styles.postPhotoWrapper,
                                         {
-                                            height: screenWidth,
                                             backgroundColor: "none",
                                         },
                                     ]}
@@ -100,12 +165,7 @@ const CreatePostScreen = ({ navigation }) => {
                                     </TouchableOpacity>
                                 </ImageBackground>
                             ) : (
-                                <View
-                                    style={[
-                                        styles.postPhotoWrapper,
-                                        { height: screenWidth },
-                                    ]}
-                                >
+                                <View style={styles.postPhotoWrapper}>
                                     <TouchableOpacity
                                         style={
                                             styles.postWithoutPhotoIconWrapper
@@ -126,53 +186,123 @@ const CreatePostScreen = ({ navigation }) => {
                                 </Text>
                             </TouchableOpacity>
                         </View>
-
                         <View style={styles.postInputWrapper}>
-                            <TextInput
-                                onChangeText={(e) => setName(e.target.value)}
-                                value={name}
-                                placeholder="Назва..."
-                                placeholderTextColor={"#BDBDBD"}
-                                style={styles.postInput}
-                            />
-                            <TextInput
-                                onChangeText={(e) => {
-                                    getCurrentPosition(e);
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    width: "100%",
                                 }}
-                                value={location}
-                                placeholder="Місцевість"
-                                placeholderTextColor={"#BDBDBD"}
-                                style={styles.postInput}
-                            />
-                        </View>
-                        {photoUrl ? (
-                            <TouchableOpacity
-                                style={styles.postBtnActive}
-                                onPress={() => submitPost()}
                             >
-                                <Text
-                                    style={[
-                                        styles.postBtnText,
-                                        { color: "#FFFFFF" },
-                                    ]}
+                                <TextInput
+                                    onChangeText={(event) => {
+                                        setName(event);
+                                    }}
+                                    value={name}
+                                    placeholder="Назва..."
+                                    placeholderTextColor={"#BDBDBD"}
+                                    style={styles.postInput}
+                                />
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: "#FF6C00",
+                                        borderRadius: 50,
+                                        paddingHorizontal: 5,
+                                        paddingVertical: 4,
+                                    }}
+                                    onPress={() => setName("")}
                                 >
-                                    Опублікувати
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <TouchableOpacity style={styles.postBtnDisabled}>
-                                <Text
-                                    style={[
-                                        styles.postBtnText,
-                                        { color: "#BDBDBD" },
-                                    ]}
+                                    <Ionicons
+                                        name="close"
+                                        size={28}
+                                        color={"#FFFFFF"}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    width: "100%",
+                                }}
+                            >
+                                <TextInput
+                                    onChangeText={(event) => {
+                                        setLocationPlace(event);
+                                        getCurrentPosition(event);
+                                    }}
+                                    value={locationPlace}
+                                    placeholder="Місцевість"
+                                    placeholderTextColor={"#BDBDBD"}
+                                    style={styles.postInput}
+                                />
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: "#FF6C00",
+                                        borderRadius: 50,
+                                        paddingHorizontal: 5,
+                                        paddingVertical: 4,
+                                    }}
+                                    onPress={findLocation}
                                 >
-                                    Опублікувати
-                                </Text>
+                                    <Ionicons
+                                        name="navigate-circle"
+                                        size={28}
+                                        color={"#FFFFFF"}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <TouchableOpacity
+                            style={
+                                photoUrl
+                                    ? styles.postBtnActive
+                                    : styles.postBtnDisabled
+                            }
+                            onPress={() =>
+                                route.params ? updateCurrent() : submitPost()
+                            }
+                        >
+                            <Text
+                                style={
+                                    photoUrl
+                                        ? [
+                                              styles.postBtnText,
+                                              { color: "#FFFFFF" },
+                                          ]
+                                        : [
+                                              styles.postBtnText,
+                                              { color: "#BDBDBD" },
+                                          ]
+                                }
+                            >
+                                {route.params ? "Оновити" : "Опублікувати"}
+                            </Text>
+                        </TouchableOpacity>
+                        {route.params && (
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: "#FF6C00",
+                                    borderRadius: 50,
+                                    alignSelf: "center",
+                                    paddingHorizontal: 30,
+                                    paddingVertical: 5,
+                                    marginTop: 40,
+                                }}
+                                onPress={deleteCurrent}
+                            >
+                                <Ionicons
+                                    name="trash-outline"
+                                    size={28}
+                                    color={"#FFFFFF"}
+                                />
                             </TouchableOpacity>
                         )}
-                    </View>
-                </KeyboardAvoidingView>
+                    </KeyboardAvoidingView>
+                </View>
             </View>
         </TouchableWithoutFeedback>
     );
@@ -184,15 +314,13 @@ const styles = StyleSheet.create({
         padding: 32,
         flex: 1,
     },
-    postWrapper: {
-        gap: 32,
-    },
     postPhotoWrapper: {
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#E8E8E8",
         borderRadius: 8,
         marginBottom: 8,
+        height: Dimensions.get("window").width - 60,
     },
     postWithPhotoIconWrapper: {
         padding: 18,
@@ -211,10 +339,15 @@ const styles = StyleSheet.create({
         lineHeight: 19,
         fontWeight: 400,
     },
+    postWrapperSeccond: {
+        marginBottom: 32,
+    },
     postInputWrapper: {
         gap: 16,
+        marginBottom: 32,
     },
     postInput: {
+        flex: 1,
         paddingVertical: 16,
         fontSize: 16,
         lineHeight: 19,

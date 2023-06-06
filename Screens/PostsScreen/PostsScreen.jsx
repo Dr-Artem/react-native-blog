@@ -1,5 +1,5 @@
-import { useState } from "react";
 import {
+    Dimensions,
     FlatList,
     Image,
     StyleSheet,
@@ -8,208 +8,113 @@ import {
     View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import userPhoto from "../../images/user.png";
+import { useSelector } from "react-redux";
+
+import { selectUser } from "../../redux/auth/selector";
+import { selectAllPosts } from "../../redux/posts/selector";
 
 const Posts = ({ navigation }) => {
-    const [posts, setPosts] = useState([
-        {
-            src: require("../../images/forest.png"),
-            name: "Ліс",
-            fullLocation: "Ivano-Frankivs'k Region, Ukraine",
-            location: "Ukraine",
-            likes: 0,
-            comments: [],
-        },
-        {
-            src: require("../../images/sunset.png"),
-            name: "Захід на Чорному Морі",
-            fullLocation: "Crimea, Ukraine",
-            location: "Ukraine",
-            likes: 0,
-            comments: [
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message:
-                        "Really love your most recent photo. I’ve been trying to capture the same thing for a few months and would love some tips!",
-                    date: "09 июня, 2020",
-                    time: "08:40",
-                    key: "1",
-                },
-                {
-                    userName: "user",
-                    userPicture: userPhoto,
-                    message:
-                        "A fast 50mm like f1.8 would help with the bokeh. I’ve been using primes as they tend to get a bit sharper images.",
-                    date: "09 июня, 2020",
-                    time: "09:14",
-                    key: "2",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "3",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "4",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "5",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "6",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "7",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "8",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "9",
-                },
-                {
-                    userName: "user2",
-                    userPicture: require("../../images/user2.png"),
-                    message: "Thank you! That was very helpful!",
-                    date: "09 июня, 2020",
-                    time: "09:20",
-                    key: "10",
-                },
-            ],
-        },
-        {
-            src: require("../../images/house.png"),
-            name: "Старий будиночок у Венеції",
-            fullLocation: "Venice, Italy",
-            location: "Italy",
-            likes: 0,
-            comments: [],
-        },
-    ]);
+    const user = useSelector(selectUser);
+    const posts = useSelector(selectAllPosts);
+    const userPosts = posts?.filter((post) => post.owner === user?.uid);
 
     return (
         <View style={styles.postsContainer}>
-            <View>
-                <View style={styles.userWrapper}>
-                    <View style={styles.userInfoWrapper}>
-                        <Image
-                            style={styles.userPhoto}
-                            source={userPhoto}
-                        />
-                        <View>
-                            <Text style={styles.userName}>Natali Romanova</Text>
-                            <Text style={styles.userInfo}>
-                                email@example.com
-                            </Text>
-                        </View>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.addPost}
-                        onPress={() => navigation.navigate("CreatePost")}
-                    >
-                        <Ionicons
-                            name="add-outline"
-                            size={24}
-                            color={"#FFFFFF"}
-                        />
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            <FlatList
-                data={posts}
-                renderItem={({ item }) => (
-                    <View style={styles.postWrapper}>
-                        <TouchableOpacity
-                            onPress={() =>
-                                navigation.navigate("CreatePost", item)
-                            }
-                        >
+            {user && (
+                <View>
+                    <View style={styles.userWrapper}>
+                        <View style={styles.userInfoWrapper}>
                             <Image
-                                style={styles.postPhoto}
-                                source={item.src}
+                                style={styles.userPhoto}
+                                source={{ uri: user.userPhoto }}
+                            />
+                            <View>
+                                <Text style={styles.userName}>
+                                    {user.userName}
+                                </Text>
+                                <Text style={styles.userInfo}>
+                                    {user.email}
+                                </Text>
+                            </View>
+                        </View>
+                        <TouchableOpacity
+                            style={styles.addPost}
+                            onPress={() => navigation.navigate("CreatePost")}
+                        >
+                            <Ionicons
+                                name="add-outline"
+                                size={24}
+                                color={"#FFFFFF"}
                             />
                         </TouchableOpacity>
+                    </View>
+                </View>
+            )}
 
-                        <Text style={styles.postName}>{item.name}</Text>
-                        <View style={styles.postInfo}>
+            {userPosts && (
+                <FlatList
+                    data={userPosts}
+                    renderItem={({ item }) => (
+                        <View style={styles.postWrapper}>
                             <TouchableOpacity
                                 onPress={() =>
-                                    navigation.navigate("Comments", item)
+                                    navigation.navigate("CreatePost", item)
                                 }
-                                style={styles.postComments}
                             >
-                                <Ionicons
-                                    name="chatbubble-outline"
-                                    size={24}
-                                    color={
-                                        item.comments.length === 0
-                                            ? "#BDBDBD"
-                                            : "#FF6C00"
-                                    }
+                                <Image
+                                    style={styles.postPhoto}
+                                    source={{ uri: item.src }}
                                 />
-                                <Text
-                                    style={{
-                                        color:
+                            </TouchableOpacity>
+
+                            <Text style={styles.postName}>{item.name}</Text>
+                            <View style={styles.postInfo}>
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        navigation.navigate("Comments", item)
+                                    }
+                                    style={styles.postComments}
+                                >
+                                    <Ionicons
+                                        name="chatbubble-outline"
+                                        size={24}
+                                        color={
                                             item.comments.length === 0
                                                 ? "#BDBDBD"
-                                                : "#212121",
-                                    }}
+                                                : "#FF6C00"
+                                        }
+                                    />
+                                    <Text
+                                        style={{
+                                            color:
+                                                item.comments.length === 0
+                                                    ? "#BDBDBD"
+                                                    : "#212121",
+                                        }}
+                                    >
+                                        {item.comments.length}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        navigation.navigate("Map", item)
+                                    }
+                                    style={styles.postLocation}
                                 >
-                                    {item.comments.length}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => navigation.navigate("Map", item)}
-                                style={styles.postLocation}
-                            >
-                                <Ionicons
-                                    name="location-outline"
-                                    size={24}
-                                    color={"#BDBDBD"}
-                                />
-                                <Text style={styles.postLocationText}>
-                                    {item.fullLocation}
-                                </Text>
-                            </TouchableOpacity>
+                                    <Ionicons
+                                        name="location-outline"
+                                        size={24}
+                                        color={"#BDBDBD"}
+                                    />
+                                    <Text style={styles.postLocationText}>
+                                        {item.locationPlace}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                />
+            )}
         </View>
     );
 };
@@ -261,7 +166,7 @@ const styles = StyleSheet.create({
     },
     postPhoto: {
         width: "100%",
-        height: 240,
+        height: Dimensions.get("window").width - 60,
         borderRadius: 8,
     },
     postName: {

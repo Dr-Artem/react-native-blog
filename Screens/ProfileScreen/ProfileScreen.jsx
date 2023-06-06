@@ -1,233 +1,158 @@
 import {
+    Dimensions,
     FlatList,
     Image,
     ImageBackground,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
-    TouchableWithoutFeedback,
     View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import bgImage from "../../images/BG.png";
-import userPhoto from "../../images/user.png";
+import { useDispatch, useSelector } from "react-redux";
 
-const posts = [
-    {
-        src: require("../../images/forest.png"),
-        name: "Ліс",
-        fullLocation: "Ivano-Frankivs'k Region, Ukraine",
-        location: "Ukraine",
-        likes: 2,
-        comments: [],
-    },
-    {
-        src: require("../../images/sunset.png"),
-        name: "Захід на Чорному Морі",
-        fullLocation: "Crimea, Ukraine",
-        location: "Ukraine",
-        likes: 0,
-        comments: [
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message:
-                    "Really love your most recent photo. I’ve been trying to capture the same thing for a few months and would love some tips!",
-                date: "09 июня, 2020",
-                time: "08:40",
-                key: "1",
-            },
-            {
-                userName: "user",
-                userPicture: userPhoto,
-                message:
-                    "A fast 50mm like f1.8 would help with the bokeh. I’ve been using primes as they tend to get a bit sharper images.",
-                date: "09 июня, 2020",
-                time: "09:14",
-                key: "2",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "3",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "4",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "5",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "6",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "7",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "8",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "9",
-            },
-            {
-                userName: "user2",
-                userPicture: require("../../images/user2.png"),
-                message: "Thank you! That was very helpful!",
-                date: "09 июня, 2020",
-                time: "09:20",
-                key: "10",
-            },
-        ],
-    },
-    {
-        src: require("../../images/house.png"),
-        name: "Старий будиночок у Венеції",
-        fullLocation: "Venice, Italy",
-        location: "Italy",
-        likes: 0,
-        comments: [],
-    },
-];
+import { logoutDB } from "../../hooks/authHooks";
+import bgImage from "../../images/BG.png";
+
+import { selectUser } from "../../redux/auth/selector";
+import { addLike } from "../../redux/posts/operation";
+import { selectAllPosts } from "../../redux/posts/selector";
 
 const ProfileScreen = ({ navigation }) => {
-    return (
-        <ImageBackground
-            source={bgImage}
-            resizeMode="cover"
-            style={styles.backgroundImage}
-        >
-            <View style={styles.profileContainer}>
-                <View style={styles.profilePhotoWrapper}>
-                    <Image
-                        style={styles.profileUserPhoto}
-                        source={userPhoto}
-                    />
-                </View>
-                <TouchableOpacity
-                    style={styles.profilelogOutBtn}
-                    onPress={() => navigation.navigate("Login")}
-                >
-                    <Ionicons
-                        name="log-out-outline"
-                        size={24}
-                        color={"#BDBDBD"}
-                    />
-                </TouchableOpacity>
-                <Text style={styles.profileHeader}>Natali Romanova</Text>
+    const dispatch = useDispatch();
+    const user = useSelector(selectUser);
+    const posts = useSelector(selectAllPosts);
 
-                <FlatList
-                    data={posts}
-                    renderItem={({ item }) => (
-                        <View style={styles.postWrapper}>
-                            <TouchableOpacity
-                                onPress={() =>
-                                    navigation.navigate("Comments", item)
-                                }
-                            >
+    const userPosts = posts?.filter((post) => post.owner === user?.uid);
+
+    const likePost = (id) => {
+        const userId = user.uid;
+        const postId = id;
+        dispatch(addLike({ userId, postId }));
+    };
+
+    return (
+        user && (
+            <ImageBackground
+                source={bgImage}
+                resizeMode="cover"
+                style={styles.backgroundImage}
+            >
+                <View style={styles.profileContainer}>
+                    <View style={styles.profilePhotoWrapper}>
+                        <Image
+                            style={styles.profileUserPhoto}
+                            source={{ uri: user.userPhoto }}
+                        />
+                    </View>
+                    <TouchableOpacity
+                        style={styles.profilelogOutBtn}
+                        onPress={() => {
+                            logoutDB();
+                            navigation.navigate("Login");
+                        }}
+                    >
+                        <Ionicons
+                            name="log-out-outline"
+                            size={24}
+                            color={"#BDBDBD"}
+                        />
+                    </TouchableOpacity>
+                    <Text style={styles.profileHeader}>{user.userName}</Text>
+
+                    <FlatList
+                        data={userPosts}
+                        renderItem={({ item }) => (
+                            <View style={styles.postWrapper}>
                                 <Image
                                     style={styles.postPhoto}
-                                    source={item.src}
+                                    source={{ uri: item.src }}
                                 />
-                            </TouchableOpacity>
 
-                            <Text style={styles.postName}>{item.name}</Text>
-                            <View style={styles.postInfo}>
-                                <View style={styles.postReactions}>
-                                    <View style={styles.postComments}>
-                                        <Ionicons
-                                            name="chatbubble-outline"
-                                            size={24}
-                                            color={
-                                                item.comments.length === 0
-                                                    ? "#BDBDBD"
-                                                    : "#FF6C00"
+                                <Text style={styles.postName}>{item.name}</Text>
+                                <View style={styles.postInfo}>
+                                    <View style={styles.postReactions}>
+                                        <TouchableOpacity
+                                            onPress={() =>
+                                                navigation.navigate(
+                                                    "Comments",
+                                                    item
+                                                )
                                             }
-                                        />
-                                        <Text
-                                            style={{
-                                                color:
-                                                    item.comments.length === 0
-                                                        ? "#BDBDBD"
-                                                        : "#212121",
-                                            }}
                                         >
-                                            {item.comments.length}
-                                        </Text>
+                                            <View style={styles.postComments}>
+                                                <Ionicons
+                                                    name="chatbubble-outline"
+                                                    size={24}
+                                                    color={
+                                                        item?.comments
+                                                            .length === 0
+                                                            ? "#BDBDBD"
+                                                            : "#FF6C00"
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        color:
+                                                            item?.comments
+                                                                .length === 0
+                                                                ? "#BDBDBD"
+                                                                : "#212121",
+                                                    }}
+                                                >
+                                                    {item?.comments.length}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => likePost(item.id)}
+                                        >
+                                            <View style={styles.postLikes}>
+                                                <Ionicons
+                                                    name="thumbs-up-outline"
+                                                    size={24}
+                                                    color={
+                                                        item.likes.length === 0
+                                                            ? "#BDBDBD"
+                                                            : "#FF6C00"
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        color:
+                                                            item.likes
+                                                                .length === 0
+                                                                ? "#BDBDBD"
+                                                                : "#212121",
+                                                    }}
+                                                >
+                                                    {item.likes.length}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
                                     </View>
-                                    <View style={styles.postLikes}>
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            navigation.navigate("Map", item)
+                                        }
+                                        style={styles.postLocation}
+                                    >
                                         <Ionicons
-                                            name="thumbs-up-outline"
+                                            name="location-outline"
                                             size={24}
-                                            color={
-                                                item.likes === 0
-                                                    ? "#BDBDBD"
-                                                    : "#FF6C00"
-                                            }
+                                            color={"#BDBDBD"}
                                         />
-                                        <Text
-                                            style={{
-                                                color:
-                                                    item.likes === 0
-                                                        ? "#BDBDBD"
-                                                        : "#212121",
-                                            }}
-                                        >
-                                            {item.likes}
+                                        <Text style={styles.postLocationText}>
+                                            {item.locationPlace}
                                         </Text>
-                                    </View>
-                                </View>
-                                <View style={styles.postLocation}>
-                                    <Ionicons
-                                        name="location-outline"
-                                        size={24}
-                                        color={"#BDBDBD"}
-                                    />
-                                    <Text style={styles.postLocationText}>
-                                        {item.location}
-                                    </Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
-                        </View>
-                    )}
-                />
-            </View>
-        </ImageBackground>
+                        )}
+                    />
+                </View>
+            </ImageBackground>
+        )
     );
 };
 
@@ -266,7 +191,6 @@ const styles = StyleSheet.create({
         height: 120,
     },
     profileHeader: {
-        // fontFamily: "Roboto",
         fontWeight: 500,
         fontSize: 30,
         lineHeight: 35,
@@ -282,7 +206,7 @@ const styles = StyleSheet.create({
     },
     postPhoto: {
         width: "100%",
-        height: 240,
+        height: Dimensions.get("window").width - 60,
         borderRadius: 8,
     },
     postName: {
